@@ -1,6 +1,9 @@
 /** @type {import('vite').UserConfig} */
-export default {
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  base: "/wiki-search/",
   build: {
     sourcemap: true,
   },
-};
+});

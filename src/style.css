@@ -40,7 +40,6 @@ h1 {
   max-width: 1280px;
   margin: 0 auto;
   padding: 2rem;
-  
 }
 
 button {
@@ -62,10 +61,10 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 /**/
-h1{
+h1 {
   text-align: center;
 }
-.wikipedia__search{
+.wikipedia__search {
   text-align: center;
 }
 #wikipedia__search--input {
@@ -158,7 +157,7 @@ h1{
     color: #213547;
     background-color: #ffffff;
   }
-  a{
+  a {
     color: black;
   }
   a:hover {

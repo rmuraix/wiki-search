@@ -32,6 +32,7 @@ document.querySelector("#app").innerHTML = `
       })
       .catch(() => {
         alert("wikipediaにうまくアクセスできないようです、、");
+        loader.classList.remove("display");
       });
 
     const valueJson = await fetchValue; //非同期処理を実行
@@ -75,8 +76,9 @@ document.querySelector("#app").innerHTML = `
 
   //クリックイベントに設定している関数
   const wikiData = () => {
-    wikiBody.innerHTML = ""; //一旦js-wikipedia-bodyの中を空にする
     const inputValue = wikiInput.value; //Input要素に入力されたテキストを取得
+    if (inputValue == "") return;
+    wikiBody.innerHTML = ""; //一旦js-wikipedia-bodyの中を空にする
     loader.classList.add("display");
     wikiFetch(inputValue);
   };

@@ -32,6 +32,7 @@ document.querySelector("#app").innerHTML = `
       })
       .catch(() => {
         alert("wikipediaにうまくアクセスできないようです、、");
+        loader.classList.remove("display");
       });
 
     const valueJson = await fetchValue; //非同期処理を実行

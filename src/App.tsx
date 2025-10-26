@@ -61,7 +61,7 @@ function App() {
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       handleSearch();
     }
@@ -90,7 +90,7 @@ function App() {
             placeholder="検索ワード"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyDown}
             className="flex-1"
           />
           <Button onClick={handleSearch} disabled={loading}>
@@ -112,7 +112,7 @@ function App() {
             {results.map((result) => (
               <a
                 key={result.pageid}
-                href={`http://jp.wikipedia.org/?curid=${result.pageid}`}
+                href={`https://jp.wikipedia.org/?curid=${result.pageid}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="transition-transform hover:scale-105"

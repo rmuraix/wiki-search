@@ -72,8 +72,10 @@ function App() {
   };
 
   const formatSnippet = (snippet: string) => {
-    // Remove HTML tags and truncate
-    const text = snippet.replace(/<[^>]*>/g, "");
+    // Create a temporary DOM element to safely strip HTML tags
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = snippet;
+    const text = tempDiv.textContent || tempDiv.innerText || "";
     return text.slice(0, 200) + (text.length > 200 ? "..." : "");
   };
 

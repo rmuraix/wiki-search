@@ -168,7 +168,9 @@ function App() {
 
       setResults((prev) => [...prev, ...formattedResults]);
       setHasMore(!!data.continue);
-      setOffset(data.continue?.sroffset || 0);
+      if (data.continue && typeof data.continue.sroffset === "number") {
+        setOffset(data.continue.sroffset);
+      }
     } catch (error) {
       console.error("Error loading more results:", error);
       setError("追加の結果を読み込めませんでした。");

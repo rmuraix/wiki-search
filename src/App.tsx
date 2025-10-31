@@ -45,6 +45,7 @@ function App() {
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreTriggerRef = useRef<HTMLDivElement | null>(null);
   const isLoadingMoreRef = useRef(false);
+  const loadMoreCallbackRef = useRef<(() => void) | null>(null);
 
   // Helper function to format snippets (moved to data-fetching phase)
   const formatSnippet = useCallback((snippet: string) => {
@@ -143,6 +144,7 @@ function App() {
 
     isLoadingMoreRef.current = true;
     setLoadingMore(true);
+    setError(null); // Clear any previous errors
 
     try {
       const response = await fetch(
@@ -180,6 +182,11 @@ function App() {
     }
   }, [hasMore, loadingMore, searchQuery, offset, formatSnippet]);
 
+  // Store the latest loadMore function in a ref
+  useEffect(() => {
+    loadMoreCallbackRef.current = loadMore;
+  }, [loadMore]);
+
   // Setup intersection observer for infinite scrolling
   useEffect(() => {
     // Only set up observer if we have results and more to load
@@ -196,7 +203,7 @@ function App() {
     const callback: IntersectionObserverCallback = (entries) => {
       const [entry] = entries;
       if (entry.isIntersecting && hasMore && !loadingMore && !loading) {
-        loadMore();
+        loadMoreCallbackRef.current?.();
       }
     };
 
@@ -208,9 +215,8 @@ function App() {
         observerRef.current.disconnect();
       }
     };
-    // Note: loadMore is intentionally in dependencies despite causing recreation
-    // This ensures the observer always has the latest loadMore function with current state
-  }, [hasMore, loadMore, loadingMore, loading, searched]);
+    // loadMore is now accessed via ref, so only state dependencies are needed
+  }, [hasMore, loadingMore, loading, searched]);
 
   // Cleanup on unmount
   useEffect(() => {

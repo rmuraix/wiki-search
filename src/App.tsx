@@ -216,6 +216,9 @@ function App() {
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
       }
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
     };
   }, []);
 
@@ -238,7 +241,7 @@ function App() {
       // Optionally trigger debounced search on input
       // debouncedSearch();
     },
-    [debouncedSearch],
+    [],
   );
 
   return (

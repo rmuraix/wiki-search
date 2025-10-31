@@ -171,6 +171,7 @@ function App() {
       setOffset(data.continue?.sroffset || 0);
     } catch (error) {
       console.error("Error loading more results:", error);
+      setError("追加の結果を読み込めませんでした。");
     } finally {
       setLoadingMore(false);
       isLoadingMoreRef.current = false;
@@ -205,6 +206,8 @@ function App() {
         observerRef.current.disconnect();
       }
     };
+    // Note: loadMore is intentionally in dependencies despite causing recreation
+    // This ensures the observer always has the latest loadMore function with current state
   }, [hasMore, loadMore, loadingMore, loading, searched]);
 
   // Cleanup on unmount
@@ -241,6 +244,7 @@ function App() {
       // Optionally trigger debounced search on input
       // debouncedSearch();
     },
+    // Empty dependency array: setSearchQuery is stable, debouncedSearch call is commented out
     [],
   );
 

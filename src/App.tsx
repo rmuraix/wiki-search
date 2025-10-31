@@ -147,7 +147,7 @@ function App() {
       // Optionally trigger debounced search on input
       // debouncedSearch();
     },
-    [],
+    [debouncedSearch],
   );
 
   return (

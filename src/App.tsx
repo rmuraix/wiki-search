@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -16,6 +16,7 @@ interface WikiResult {
   title: string;
   snippet: string;
   timestamp: string;
+  formattedSnippet?: string;
 }
 
 interface WikiResponse {
@@ -29,13 +30,41 @@ function App() {
   const [results, setResults] = useState<WikiResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSearch = async () => {
+  // Refs for AbortController and debounce timer
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Helper function to format snippets (moved to data-fetching phase)
+  const formatSnippet = useCallback((snippet: string) => {
+    // Create a temporary DOM element to safely strip HTML tags
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = snippet;
+    const text = tempDiv.textContent || tempDiv.innerText || "";
+    return text.slice(0, 200) + (text.length > 200 ? "..." : "");
+  }, []);
+
+  // Helper function to format dates - memoized to prevent recreation
+  const formatDate = useCallback((timestamp: string) => {
+    return timestamp.slice(0, 10).replace(/-/g, ".");
+  }, []);
+
+  const handleSearch = useCallback(async () => {
     if (!searchQuery.trim()) return;
+
+    // Cancel any previous request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    // Create new AbortController for this request
+    abortControllerRef.current = new AbortController();
 
     setLoading(true);
     setSearched(true);
     setResults([]);
+    setError(null);
 
     try {
       const response = await fetch(
@@ -44,6 +73,7 @@ function App() {
         )}`,
         {
           method: "GET",
+          signal: abortControllerRef.current.signal,
         },
       );
 
@@ -52,32 +82,73 @@ function App() {
       }
 
       const data: WikiResponse = await response.json();
-      setResults(data.query.search);
+
+      // Format snippets during data fetching, not during render
+      const formattedResults = data.query.search.map((result) => ({
+        ...result,
+        formattedSnippet: formatSnippet(result.snippet),
+      }));
+
+      setResults(formattedResults);
     } catch (error) {
+      // Don't show error for aborted requests
+      if (error instanceof Error && error.name === "AbortError") {
+        return;
+      }
+
       console.error("Error fetching Wikipedia data:", error);
-      alert("wikipediaにうまくアクセスできないようです、、");
+      setError("wikipediaにうまくアクセスできないようです、、");
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchQuery, formatSnippet]);
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      handleSearch();
+  // Debounced search for automatic searching
+  const debouncedSearch = useCallback(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
     }
-  };
 
-  const formatDate = (timestamp: string) => {
-    return timestamp.slice(0, 10).replace(/-/g, ".");
-  };
+    debounceTimerRef.current = setTimeout(() => {
+      if (searchQuery.trim()) {
+        handleSearch();
+      }
+    }, 300);
+  }, [searchQuery, handleSearch]);
 
-  const formatSnippet = (snippet: string) => {
-    // Create a temporary DOM element to safely strip HTML tags
-    const tempDiv = document.createElement("div");
-    tempDiv.innerHTML = snippet;
-    const text = tempDiv.textContent || tempDiv.innerText || "";
-    return text.slice(0, 200) + (text.length > 200 ? "..." : "");
-  };
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter") {
+        // Clear any pending debounced search
+        if (debounceTimerRef.current) {
+          clearTimeout(debounceTimerRef.current);
+        }
+        handleSearch();
+      }
+    },
+    [handleSearch],
+  );
+
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setSearchQuery(e.target.value);
+      // Optionally trigger debounced search on input
+      // debouncedSearch();
+    },
+    [debouncedSearch],
+  );
 
   return (
     <div className="wiki-search-container">
@@ -91,11 +162,18 @@ function App() {
             type="text"
             placeholder="検索ワード"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             className="flex-1"
+            aria-busy={loading}
+            aria-label="検索ワード"
           />
-          <Button onClick={handleSearch} disabled={loading}>
+          <Button
+            type="button"
+            onClick={handleSearch}
+            disabled={loading}
+            aria-label="検索"
+          >
             <Search className="h-4 w-4 mr-2" />
             検索
           </Button>
@@ -103,18 +181,36 @@ function App() {
 
         {loading && <div className="loading-spinner" />}
 
-        {!loading && searched && results.length === 0 && (
-          <p className="text-center text-muted-foreground mt-8">
+        {error && (
+          <div
+            className="text-center text-red-600 mt-8 p-4 bg-red-50 rounded-md max-w-xl mx-auto"
+            role="alert"
+            aria-live="polite"
+          >
+            {error}
+          </div>
+        )}
+
+        {!loading && searched && results.length === 0 && !error && (
+          <p
+            className="text-center text-muted-foreground mt-8"
+            role="status"
+            aria-live="polite"
+          >
             検索したワードはヒットしませんでした。
           </p>
         )}
 
         {!loading && results.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-8">
+          <div
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-8"
+            role="region"
+            aria-label="検索結果"
+          >
             {results.map((result) => (
               <a
                 key={result.pageid}
-                href={`https://jp.wikipedia.org/?curid=${result.pageid}`}
+                href={`https://ja.wikipedia.org/?curid=${result.pageid}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="transition-transform hover:scale-105"
@@ -127,7 +223,7 @@ function App() {
                   </CardHeader>
                   <CardContent>
                     <CardDescription className="line-clamp-4">
-                      {formatSnippet(result.snippet)}
+                      {result.formattedSnippet}
                     </CardDescription>
                   </CardContent>
                   <CardFooter>

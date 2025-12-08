@@ -19,7 +19,7 @@
     "prettier": "^3.6.2",
     "tailwindcss": "^4.1.17",
     "typescript": "^5.9.3",
-    "vite": "^7.2.4"
+    "vite": "^7.2.6"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.4",

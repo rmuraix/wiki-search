@@ -1,6 +1,6 @@
-import { useState, useCallback, useRef, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Search } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
@@ -8,76 +8,76 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Search } from "lucide-react";
+} from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 
 interface WikiResult {
-  pageid: number;
-  title: string;
-  snippet: string;
-  timestamp: string;
-  formattedSnippet?: string;
+  pageid: number
+  title: string
+  snippet: string
+  timestamp: string
+  formattedSnippet?: string
 }
 
 interface WikiResponse {
   query: {
-    search: WikiResult[];
-  };
+    search: WikiResult[]
+  }
   continue?: {
-    sroffset: number;
-    continue: string;
-  };
+    sroffset: number
+    continue: string
+  }
 }
 
 function App() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [results, setResults] = useState<WikiResult[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [searched, setSearched] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [hasMore, setHasMore] = useState(true);
-  const [offset, setOffset] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('')
+  const [results, setResults] = useState<WikiResult[]>([])
+  const [loading, setLoading] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [searched, setSearched] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [hasMore, setHasMore] = useState(true)
+  const [offset, setOffset] = useState(0)
 
   // Refs for AbortController and debounce timer
-  const abortControllerRef = useRef<AbortController | null>(null);
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const observerRef = useRef<IntersectionObserver | null>(null);
-  const loadMoreTriggerRef = useRef<HTMLDivElement | null>(null);
-  const isLoadingMoreRef = useRef(false);
-  const loadMoreCallbackRef = useRef<(() => void) | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null)
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const observerRef = useRef<IntersectionObserver | null>(null)
+  const loadMoreTriggerRef = useRef<HTMLDivElement | null>(null)
+  const isLoadingMoreRef = useRef(false)
+  const loadMoreCallbackRef = useRef<(() => void) | null>(null)
 
   // Helper function to format snippets (moved to data-fetching phase)
   const formatSnippet = useCallback((snippet: string) => {
     // Create a temporary DOM element to safely strip HTML tags
-    const tempDiv = document.createElement("div");
-    tempDiv.innerHTML = snippet;
-    const text = tempDiv.textContent || tempDiv.innerText || "";
-    return text.slice(0, 200) + (text.length > 200 ? "..." : "");
-  }, []);
+    const tempDiv = document.createElement('div')
+    tempDiv.innerHTML = snippet
+    const text = tempDiv.textContent || tempDiv.innerText || ''
+    return text.slice(0, 200) + (text.length > 200 ? '...' : '')
+  }, [])
 
   // Helper function to format dates - memoized to prevent recreation
   const formatDate = useCallback((timestamp: string) => {
-    return timestamp.slice(0, 10).replace(/-/g, ".");
-  }, []);
+    return timestamp.slice(0, 10).replace(/-/g, '.')
+  }, [])
 
   const handleSearch = useCallback(async () => {
-    if (!searchQuery.trim()) return;
+    if (!searchQuery.trim()) return
 
     // Cancel any previous request
     if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
+      abortControllerRef.current.abort()
     }
 
     // Create new AbortController for this request
-    abortControllerRef.current = new AbortController();
+    abortControllerRef.current = new AbortController()
 
-    setLoading(true);
-    setSearched(true);
-    setResults([]);
-    setError(null);
-    setHasMore(true);
-    setOffset(0);
+    setLoading(true)
+    setSearched(true)
+    setResults([])
+    setError(null)
+    setHasMore(true)
+    setOffset(0)
 
     try {
       const response = await fetch(
@@ -85,51 +85,51 @@ function App() {
           searchQuery,
         )}`,
         {
-          method: "GET",
+          method: 'GET',
           signal: abortControllerRef.current.signal,
         },
-      );
+      )
 
       if (!response.ok) {
-        throw new Error("Failed to fetch");
+        throw new Error('Failed to fetch')
       }
 
-      const data: WikiResponse = await response.json();
+      const data: WikiResponse = await response.json()
 
       // Format snippets during data fetching, not during render
       const formattedResults = data.query.search.map((result) => ({
         ...result,
         formattedSnippet: formatSnippet(result.snippet),
-      }));
+      }))
 
-      setResults(formattedResults);
-      setHasMore(!!data.continue);
-      setOffset(data.continue?.sroffset || 0);
+      setResults(formattedResults)
+      setHasMore(!!data.continue)
+      setOffset(data.continue?.sroffset || 0)
     } catch (error) {
       // Don't show error for aborted requests
-      if (error instanceof Error && error.name === "AbortError") {
-        return;
+      if (error instanceof Error && error.name === 'AbortError') {
+        return
       }
 
-      console.error("Error fetching Wikipedia data:", error);
-      setError("wikipediaにうまくアクセスできないようです、、");
+      console.error('Error fetching Wikipedia data:', error)
+      setError('wikipediaにうまくアクセスできないようです、、')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  }, [searchQuery, formatSnippet]);
+  }, [searchQuery, formatSnippet])
 
   // Debounced search for automatic searching
-  const debouncedSearch = useCallback(() => {
+  const _debouncedSearch = useCallback(() => {
     if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
+      clearTimeout(debounceTimerRef.current)
     }
 
     debounceTimerRef.current = setTimeout(() => {
       if (searchQuery.trim()) {
-        handleSearch();
+        handleSearch()
       }
-    }, 300);
-  }, [searchQuery, handleSearch]);
+    }, 300)
+  }, [searchQuery, handleSearch])
 
   // Load more results for infinite scrolling
   const loadMore = useCallback(async () => {
@@ -139,12 +139,12 @@ function App() {
       !searchQuery.trim() ||
       isLoadingMoreRef.current
     ) {
-      return;
+      return
     }
 
-    isLoadingMoreRef.current = true;
-    setLoadingMore(true);
-    setError(null); // Clear any previous errors
+    isLoadingMoreRef.current = true
+    setLoadingMore(true)
+    setError(null) // Clear any previous errors
 
     try {
       const response = await fetch(
@@ -152,109 +152,109 @@ function App() {
           searchQuery,
         )}`,
         {
-          method: "GET",
+          method: 'GET',
         },
-      );
+      )
 
       if (!response.ok) {
-        throw new Error("Failed to fetch");
+        throw new Error('Failed to fetch')
       }
 
-      const data: WikiResponse = await response.json();
+      const data: WikiResponse = await response.json()
 
       // Format snippets during data fetching
       const formattedResults = data.query.search.map((result) => ({
         ...result,
         formattedSnippet: formatSnippet(result.snippet),
-      }));
+      }))
 
-      setResults((prev) => [...prev, ...formattedResults]);
-      setHasMore(!!data.continue);
-      if (data.continue && typeof data.continue.sroffset === "number") {
-        setOffset(data.continue.sroffset);
+      setResults((prev) => [...prev, ...formattedResults])
+      setHasMore(!!data.continue)
+      if (data.continue && typeof data.continue.sroffset === 'number') {
+        setOffset(data.continue.sroffset)
       }
     } catch (error) {
-      console.error("Error loading more results:", error);
-      setError("追加の結果を読み込めませんでした。");
+      console.error('Error loading more results:', error)
+      setError('追加の結果を読み込めませんでした。')
     } finally {
-      setLoadingMore(false);
-      isLoadingMoreRef.current = false;
+      setLoadingMore(false)
+      isLoadingMoreRef.current = false
     }
-  }, [hasMore, loadingMore, searchQuery, offset, formatSnippet]);
+  }, [hasMore, loadingMore, searchQuery, offset, formatSnippet])
 
   // Store the latest loadMore function in a ref
   useEffect(() => {
-    loadMoreCallbackRef.current = loadMore;
-  }, [loadMore]);
+    loadMoreCallbackRef.current = loadMore
+  }, [loadMore])
 
   // Setup intersection observer for infinite scrolling
   useEffect(() => {
     // Only set up observer if we have results and more to load
     if (!loadMoreTriggerRef.current || !hasMore || !searched) {
-      return;
+      return
     }
 
     const options = {
       root: null,
-      rootMargin: "100px", // Start loading before reaching the bottom
+      rootMargin: '100px', // Start loading before reaching the bottom
       threshold: 0.1,
-    };
+    }
 
     const callback: IntersectionObserverCallback = (entries) => {
-      const [entry] = entries;
+      const [entry] = entries
       if (entry.isIntersecting && hasMore && !loadingMore && !loading) {
-        loadMoreCallbackRef.current?.();
+        loadMoreCallbackRef.current?.()
       }
-    };
+    }
 
-    observerRef.current = new IntersectionObserver(callback, options);
-    observerRef.current.observe(loadMoreTriggerRef.current);
+    observerRef.current = new IntersectionObserver(callback, options)
+    observerRef.current.observe(loadMoreTriggerRef.current)
 
     return () => {
       if (observerRef.current) {
-        observerRef.current.disconnect();
+        observerRef.current.disconnect()
       }
-    };
+    }
     // loadMore is now accessed via ref, so only state dependencies are needed
-  }, [hasMore, loadingMore, loading, searched]);
+  }, [hasMore, loadingMore, loading, searched])
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
+        abortControllerRef.current.abort()
       }
       if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
+        clearTimeout(debounceTimerRef.current)
       }
       if (observerRef.current) {
-        observerRef.current.disconnect();
+        observerRef.current.disconnect()
       }
-    };
-  }, []);
+    }
+  }, [])
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === "Enter") {
+      if (e.key === 'Enter') {
         // Clear any pending debounced search
         if (debounceTimerRef.current) {
-          clearTimeout(debounceTimerRef.current);
+          clearTimeout(debounceTimerRef.current)
         }
-        handleSearch();
+        handleSearch()
       }
     },
     [handleSearch],
-  );
+  )
 
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      setSearchQuery(e.target.value);
+      setSearchQuery(e.target.value)
       // Optionally trigger debounced search on input
       // debouncedSearch();
     },
     // Empty dependency array: setSearchQuery is stable, debouncedSearch call is commented out
     [],
-  );
+  )
 
   return (
     <div className="wiki-search-container">
@@ -362,7 +362,7 @@ function App() {
         )}
       </div>
     </div>
-  );
+  )
 }
 
-export default App;
+export default App

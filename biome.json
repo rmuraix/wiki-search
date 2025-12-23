@@ -51,11 +51,17 @@
     "enabled": true,
     "actions": { "source": { "organizeImports": "on" } }
   },
-  "overrides": [
-    {
-      "includes": ["**/*.css"],
-      "linter": { "enabled": false },
-      "formatter": { "enabled": false }
+  "css": {
+    "parser": {
+      "cssModules": false,
+      "allowWrongLineComments": true,
+      "tailwindDirectives": true
+    },
+    "formatter": {
+      "enabled": false
+    },
+    "linter": {
+      "enabled": false
     }
-  ]
+  }
 }

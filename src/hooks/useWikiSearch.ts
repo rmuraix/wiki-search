@@ -19,43 +19,46 @@ export const useWikiSearch = () => {
   const initialSearchDoneRef = useRef(false)
   const initialSearchAbortControllerRef = useRef<AbortController | null>(null)
 
-  const performSearch = useCallback(async (query: string, signal?: AbortSignal) => {
-    if (!query.trim()) return
+  const performSearch = useCallback(
+    async (query: string, signal?: AbortSignal) => {
+      if (!query.trim()) return
 
-    setLoading(true)
-    setSearched(true)
-    setResults([])
-    setError(null)
-    setHasMore(true)
-    setOffset(0)
+      setLoading(true)
+      setSearched(true)
+      setResults([])
+      setError(null)
+      setHasMore(true)
+      setOffset(0)
 
-    try {
-      const data = await searchWikipedia({
-        query,
-        signal,
-      })
+      try {
+        const data = await searchWikipedia({
+          query,
+          signal,
+        })
 
-      // Format snippets during data fetching
-      const formattedResults = data.query.search.map((result) => ({
-        ...result,
-        formattedSnippet: formatSnippet(result.snippet),
-      }))
+        // Format snippets during data fetching
+        const formattedResults = data.query.search.map((result) => ({
+          ...result,
+          formattedSnippet: formatSnippet(result.snippet),
+        }))
 
-      setResults(formattedResults)
-      setHasMore(!!data.continue)
-      setOffset(data.continue?.sroffset || 0)
-    } catch (error) {
-      // Don't show error for aborted requests
-      if (error instanceof Error && error.name === 'AbortError') {
-        return
+        setResults(formattedResults)
+        setHasMore(!!data.continue)
+        setOffset(data.continue?.sroffset || 0)
+      } catch (error) {
+        // Don't show error for aborted requests
+        if (error instanceof Error && error.name === 'AbortError') {
+          return
+        }
+
+        console.error('Error fetching Wikipedia data:', error)
+        setError('wikipediaにうまくアクセスできないようです、、')
+      } finally {
+        setLoading(false)
       }
-
-      console.error('Error fetching Wikipedia data:', error)
-      setError('wikipediaにうまくアクセスできないようです、、')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+    },
+    [],
+  )
 
   const handleSearch = useCallback(async () => {
     if (!searchQuery.trim()) return
@@ -131,10 +134,13 @@ export const useWikiSearch = () => {
     const queryFromUrl = searchParams.get('q')
     if (queryFromUrl && !initialSearchDoneRef.current) {
       initialSearchDoneRef.current = true
-      
+
       // Create AbortController for initial search
       initialSearchAbortControllerRef.current = new AbortController()
-      performSearch(queryFromUrl, initialSearchAbortControllerRef.current.signal)
+      performSearch(
+        queryFromUrl,
+        initialSearchAbortControllerRef.current.signal,
+      )
     }
     // Only run once on mount to check for initial query param
     // eslint-disable-next-line react-hooks/exhaustive-deps

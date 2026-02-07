@@ -62,7 +62,9 @@ describe('useWikiSearch hook', () => {
       json: async () => mockResponse,
     } as Response)
 
-    const { result } = renderHook(() => useWikiSearch(), { wrapper: MemoryRouter })
+    const { result } = renderHook(() => useWikiSearch(), {
+      wrapper: MemoryRouter,
+    })
 
     act(() => {
       result.current.setSearchQuery('test')
@@ -84,7 +86,9 @@ describe('useWikiSearch hook', () => {
   })
 
   it('should not search with empty query', async () => {
-    const { result } = renderHook(() => useWikiSearch(), { wrapper: MemoryRouter })
+    const { result } = renderHook(() => useWikiSearch(), {
+      wrapper: MemoryRouter,
+    })
 
     act(() => {
       result.current.setSearchQuery('')
@@ -101,7 +105,9 @@ describe('useWikiSearch hook', () => {
   it('should handle search errors', async () => {
     vi.mocked(fetch).mockRejectedValueOnce(new Error('Network error'))
 
-    const { result } = renderHook(() => useWikiSearch(), { wrapper: MemoryRouter })
+    const { result } = renderHook(() => useWikiSearch(), {
+      wrapper: MemoryRouter,
+    })
 
     act(() => {
       result.current.setSearchQuery('test')
@@ -126,7 +132,9 @@ describe('useWikiSearch hook', () => {
     abortError.name = 'AbortError'
     vi.mocked(fetch).mockRejectedValueOnce(abortError)
 
-    const { result } = renderHook(() => useWikiSearch(), { wrapper: MemoryRouter })
+    const { result } = renderHook(() => useWikiSearch(), {
+      wrapper: MemoryRouter,
+    })
 
     act(() => {
       result.current.setSearchQuery('test')
@@ -184,7 +192,9 @@ describe('useWikiSearch hook', () => {
         json: async () => moreResponse,
       } as Response)
 
-    const { result } = renderHook(() => useWikiSearch(), { wrapper: MemoryRouter })
+    const { result } = renderHook(() => useWikiSearch(), {
+      wrapper: MemoryRouter,
+    })
 
     act(() => {
       result.current.setSearchQuery('test')
@@ -232,7 +242,9 @@ describe('useWikiSearch hook', () => {
       json: async () => mockResponse,
     } as Response)
 
-    const { result } = renderHook(() => useWikiSearch(), { wrapper: MemoryRouter })
+    const { result } = renderHook(() => useWikiSearch(), {
+      wrapper: MemoryRouter,
+    })
 
     act(() => {
       result.current.setSearchQuery('test')

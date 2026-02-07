@@ -17,6 +17,7 @@ export const useWikiSearch = () => {
   const abortControllerRef = useRef<AbortController | null>(null)
   const isLoadingMoreRef = useRef(false)
   const initialSearchDoneRef = useRef(false)
+  const initialSearchAbortControllerRef = useRef<AbortController | null>(null)
 
   const performSearch = useCallback(async (query: string, signal?: AbortSignal) => {
     if (!query.trim()) return
@@ -119,6 +120,9 @@ export const useWikiSearch = () => {
       if (abortControllerRef.current) {
         abortControllerRef.current.abort()
       }
+      if (initialSearchAbortControllerRef.current) {
+        initialSearchAbortControllerRef.current.abort()
+      }
     }
   }, [])
 
@@ -127,8 +131,12 @@ export const useWikiSearch = () => {
     const queryFromUrl = searchParams.get('q')
     if (queryFromUrl && !initialSearchDoneRef.current) {
       initialSearchDoneRef.current = true
-      performSearch(queryFromUrl)
+      
+      // Create AbortController for initial search
+      initialSearchAbortControllerRef.current = new AbortController()
+      performSearch(queryFromUrl, initialSearchAbortControllerRef.current.signal)
     }
+    // Only run once on mount to check for initial query param
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 

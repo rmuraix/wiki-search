@@ -1,4 +1,4 @@
-import { Route, Routes } from 'react-router'
+import { Route, Routes } from 'react-router-dom'
 import NotFoundPage from '@/pages/NotFoundPage'
 import SearchPage from '@/pages/SearchPage'
 

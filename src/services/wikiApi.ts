@@ -40,9 +40,8 @@ export const searchWikipedia = async ({
 }
 
 export const formatSnippet = (snippet: string): string => {
-  const tempDiv = document.createElement('div')
-  tempDiv.innerHTML = snippet
-  const text = tempDiv.textContent || tempDiv.innerText || ''
+  const doc = new DOMParser().parseFromString(snippet, 'text/html')
+  const text = doc.body.textContent || ''
   return text.slice(0, 200) + (text.length > 200 ? '...' : '')
 }
 

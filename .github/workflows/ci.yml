@@ -17,6 +17,8 @@ jobs:
         run: npm ci
       - name: Run Biome
         run: npm run format:check
+      - name: Run tests
+        run: npm test -- --run
       - name: Build project
         run: npm run build
       - name: Upload artifact

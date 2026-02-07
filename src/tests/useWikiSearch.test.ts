@@ -1,5 +1,5 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
-import { renderHook, waitFor, act } from '@testing-library/react'
+import { act, renderHook, waitFor } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useWikiSearch } from '@/hooks/useWikiSearch'
 import type { WikiResponse } from '@/types/wiki'
 
@@ -110,7 +110,9 @@ describe('useWikiSearch hook', () => {
       expect(result.current.loading).toBe(false)
     })
 
-    expect(result.current.error).toBe('wikipediaにうまくアクセスできないようです、、')
+    expect(result.current.error).toBe(
+      'wikipediaにうまくアクセスできないようです、、',
+    )
     expect(result.current.results).toEqual([])
   })
 

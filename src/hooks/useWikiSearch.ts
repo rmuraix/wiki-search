@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { formatSnippet, searchWikipedia } from '@/services/wikiApi'
 import type { WikiResult } from '@/types/wiki'
 
 export const useWikiSearch = () => {
-  const [searchQuery, setSearchQuery] = useState('')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '')
   const [results, setResults] = useState<WikiResult[]>([])
   const [loading, setLoading] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
@@ -14,17 +16,10 @@ export const useWikiSearch = () => {
 
   const abortControllerRef = useRef<AbortController | null>(null)
   const isLoadingMoreRef = useRef(false)
+  const initialSearchDoneRef = useRef(false)
 
-  const handleSearch = useCallback(async () => {
-    if (!searchQuery.trim()) return
-
-    // Cancel any previous request
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort()
-    }
-
-    // Create new AbortController for this request
-    abortControllerRef.current = new AbortController()
+  const performSearch = useCallback(async (query: string, signal?: AbortSignal) => {
+    if (!query.trim()) return
 
     setLoading(true)
     setSearched(true)
@@ -35,8 +30,8 @@ export const useWikiSearch = () => {
 
     try {
       const data = await searchWikipedia({
-        query: searchQuery,
-        signal: abortControllerRef.current.signal,
+        query,
+        signal,
       })
 
       // Format snippets during data fetching
@@ -59,7 +54,24 @@ export const useWikiSearch = () => {
     } finally {
       setLoading(false)
     }
-  }, [searchQuery])
+  }, [])
+
+  const handleSearch = useCallback(async () => {
+    if (!searchQuery.trim()) return
+
+    // Update URL with search query
+    setSearchParams({ q: searchQuery })
+
+    // Cancel any previous request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+    }
+
+    // Create new AbortController for this request
+    abortControllerRef.current = new AbortController()
+
+    await performSearch(searchQuery, abortControllerRef.current.signal)
+  }, [searchQuery, setSearchParams, performSearch])
 
   const loadMore = useCallback(async () => {
     if (
@@ -108,6 +120,16 @@ export const useWikiSearch = () => {
         abortControllerRef.current.abort()
       }
     }
+  }, [])
+
+  // Perform search on initial load if query param is present
+  useEffect(() => {
+    const queryFromUrl = searchParams.get('q')
+    if (queryFromUrl && !initialSearchDoneRef.current) {
+      initialSearchDoneRef.current = true
+      performSearch(queryFromUrl)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return {

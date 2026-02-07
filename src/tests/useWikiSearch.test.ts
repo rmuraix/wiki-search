@@ -1,4 +1,5 @@
 import { act, renderHook, waitFor } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useWikiSearch } from '@/hooks/useWikiSearch'
 import type { WikiResponse } from '@/types/wiki'
@@ -13,7 +14,9 @@ describe('useWikiSearch hook', () => {
   })
 
   it('should initialize with default values', () => {
-    const { result } = renderHook(() => useWikiSearch())
+    const { result } = renderHook(() => useWikiSearch(), {
+      wrapper: MemoryRouter,
+    })
 
     expect(result.current.searchQuery).toBe('')
     expect(result.current.results).toEqual([])
@@ -25,7 +28,9 @@ describe('useWikiSearch hook', () => {
   })
 
   it('should update search query', () => {
-    const { result } = renderHook(() => useWikiSearch())
+    const { result } = renderHook(() => useWikiSearch(), {
+      wrapper: MemoryRouter,
+    })
 
     act(() => {
       result.current.setSearchQuery('test query')
@@ -57,7 +62,7 @@ describe('useWikiSearch hook', () => {
       json: async () => mockResponse,
     } as Response)
 
-    const { result } = renderHook(() => useWikiSearch())
+    const { result } = renderHook(() => useWikiSearch(), { wrapper: MemoryRouter })
 
     act(() => {
       result.current.setSearchQuery('test')
@@ -79,7 +84,7 @@ describe('useWikiSearch hook', () => {
   })
 
   it('should not search with empty query', async () => {
-    const { result } = renderHook(() => useWikiSearch())
+    const { result } = renderHook(() => useWikiSearch(), { wrapper: MemoryRouter })
 
     act(() => {
       result.current.setSearchQuery('')
@@ -96,7 +101,7 @@ describe('useWikiSearch hook', () => {
   it('should handle search errors', async () => {
     vi.mocked(fetch).mockRejectedValueOnce(new Error('Network error'))
 
-    const { result } = renderHook(() => useWikiSearch())
+    const { result } = renderHook(() => useWikiSearch(), { wrapper: MemoryRouter })
 
     act(() => {
       result.current.setSearchQuery('test')
@@ -121,7 +126,7 @@ describe('useWikiSearch hook', () => {
     abortError.name = 'AbortError'
     vi.mocked(fetch).mockRejectedValueOnce(abortError)
 
-    const { result } = renderHook(() => useWikiSearch())
+    const { result } = renderHook(() => useWikiSearch(), { wrapper: MemoryRouter })
 
     act(() => {
       result.current.setSearchQuery('test')
@@ -179,7 +184,7 @@ describe('useWikiSearch hook', () => {
         json: async () => moreResponse,
       } as Response)
 
-    const { result } = renderHook(() => useWikiSearch())
+    const { result } = renderHook(() => useWikiSearch(), { wrapper: MemoryRouter })
 
     act(() => {
       result.current.setSearchQuery('test')
@@ -227,7 +232,7 @@ describe('useWikiSearch hook', () => {
       json: async () => mockResponse,
     } as Response)
 
-    const { result } = renderHook(() => useWikiSearch())
+    const { result } = renderHook(() => useWikiSearch(), { wrapper: MemoryRouter })
 
     act(() => {
       result.current.setSearchQuery('test')

@@ -130,6 +130,7 @@ export const useWikiSearch = () => {
   }, [])
 
   // Perform search on initial load if query param is present
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Only run once on mount to check for initial query param
   useEffect(() => {
     const queryFromUrl = searchParams.get('q')
     if (queryFromUrl && !initialSearchDoneRef.current) {
@@ -142,8 +143,6 @@ export const useWikiSearch = () => {
         initialSearchAbortControllerRef.current.signal,
       )
     }
-    // Only run once on mount to check for initial query param
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return {
